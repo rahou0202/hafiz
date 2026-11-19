@@ -462,7 +462,7 @@ function renderChoose() {
     if (el) el.addEventListener('change', () => { p[key] = Math.max(1, Math.min(max, Number(el.value) || 1)); save(); renderChoose(); });
   };
   const sel = $('#pS');
-  if (sel) sel.addEventListener('change', () => { p.s = Number(sel.value); p.from = 1; p.to = Math.min(10, list[p.s - 1].count); save(); renderChoose(); });
+  if (sel) sel.addEventListener('change', () => { p.s = Number(sel.value); p.from = 1; p.to = list[p.s - 1].count; save(); renderChoose(); }); // whole surah by default
   num('pFrom', 'from', sur.count); num('pTo', 'to', sur.count);
   $('#pRec').addEventListener('change', (e) => { D.reciter = e.target.value; save(); });
 }
