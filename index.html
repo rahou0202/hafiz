@@ -157,10 +157,7 @@ button.li:hover { border-color: var(--primary); }
   flex: none; width: 38px; height: 38px; border-radius: 10px; cursor: pointer; font-size: 16px;
   border: 2px solid #fecaca; background: #fff; color: var(--red);
 }
-.prow-del:hover { background: var(--red-soft); border-color: var(--red); }
-.choose .btn.unmark { margin-top: 10px; width: 100%; font-size: 16px; color: var(--red); border-color: #fecaca; background: #fff; white-space: normal; }
-.choose .btn.unmark:hover { background: var(--red-soft); border-color: var(--red); }
-.prow-top { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+.prow-del:hover { background: var(--red-soft); border-color: var(--red); }.prow-top { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: baseline; }
 .bar { height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; display: block; }
 .bar > i { display: block; height: 100%; background: var(--primary-grad); border-radius: 999px; }
 .warn-txt { color: var(--red); font-weight: 600; }
@@ -428,8 +425,6 @@ function renderChoose() {
       <div class="focus-form">${form}</div>
       <button class="btn primary big" data-act="start">ابدأ التسميع</button>
       <button class="btn big already" data-act="already">✓ أحفظها مسبقًا: أضِفها إلى المحفوظ</button>
-      ${selectionFromPick().refs.some(([s, a]) => D.known[s + ':' + a] || D.missed[s + ':' + a])
-        ? '<button class="btn big unmark" data-act="unmark">✗ إزالة هذه الآيات من المحفوظ</button>' : ''}
     </div>`;
 
   html += revisionCard();
@@ -797,18 +792,11 @@ view.addEventListener('click', async (e) => {
         const sel = randomRevision();
         return sel ? startPractice(sel) : toast('سمِّع بعض الآيات أولًا');
       }
-      case 'unmark':
       case 'removeSurah': {
-        // forget ayahs: the selected range, or a whole surah from the progress list
-        let refs, label;
-        if (a === 'removeSurah') {
-          const s = +el.dataset.s;
-          refs = Array.from({ length: mem.list[s - 1].count }, (_, k) => [s, k + 1]);
-          label = `سورة ${sName(s)}`;
-        } else {
-          refs = selectionFromPick().refs;
-          label = labelOf(refs);
-        }
+        // 🗑 in the progress list: forget a whole surah
+        const s = +el.dataset.s;
+        const refs = Array.from({ length: mem.list[s - 1].count }, (_, k) => [s, k + 1]);
+        const label = `سورة ${sName(s)}`;
         const hit = refs.filter(([s, x]) => D.known[s + ':' + x] || D.missed[s + ':' + x]);
         if (!hit.length) return toast('لا توجد آيات محفوظة هنا');
         if (!confirm(`إزالة «${label}» من المحفوظ؟\n\nستُحذف ${hit.length} آية من تقدُّمك ومن المراجعة العشوائية.`)) return;
