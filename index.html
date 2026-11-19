@@ -151,6 +151,15 @@ button.li:hover { border-color: var(--primary); }
   border-top: 1px solid var(--border); padding: 14px 2px; cursor: pointer; font: inherit; color: inherit;
 }
 .prow:hover b { color: var(--primary-strong); }
+.prow-wrap { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--border); }
+.prow-wrap .prow { border-top: none; flex: 1; }
+.prow-del {
+  flex: none; width: 38px; height: 38px; border-radius: 10px; cursor: pointer; font-size: 16px;
+  border: 2px solid #fecaca; background: #fff; color: var(--red);
+}
+.prow-del:hover { background: var(--red-soft); border-color: var(--red); }
+.choose .btn.unmark { margin-top: 10px; width: 100%; font-size: 16px; color: var(--red); border-color: #fecaca; background: #fff; white-space: normal; }
+.choose .btn.unmark:hover { background: var(--red-soft); border-color: var(--red); }
 .prow-top { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: baseline; }
 .bar { height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; display: block; }
 .bar > i { display: block; height: 100%; background: var(--primary-grad); border-radius: 999px; }
@@ -419,6 +428,8 @@ function renderChoose() {
       <div class="focus-form">${form}</div>
       <button class="btn primary big" data-act="start">ابدأ التسميع</button>
       <button class="btn big already" data-act="already">✓ أحفظها مسبقًا: أضِفها إلى المحفوظ</button>
+      ${selectionFromPick().refs.some(([s, a]) => D.known[s + ':' + a] || D.missed[s + ':' + a])
+        ? '<button class="btn big unmark" data-act="unmark">✗ إزالة هذه الآيات من المحفوظ</button>' : ''}
     </div>`;
 
   html += revisionCard();
@@ -484,10 +495,13 @@ function progressCard(knownIn) {
   const rows = [...touched].sort((a, b) => a - b).map((s) => {
     const count = mem.list[s - 1].count, k = knownIn[s] || 0;
     const missed = Object.keys(D.missed).filter((x) => +x.split(':')[0] === s).length;
-    return `<button class="prow" data-act="pickSurah" data-s="${s}">
-      <span class="prow-top"><b>سورة ${esc(sName(s))}</b><span class="muted small">${k} من ${count} آية${missed ? ` · <span class="warn-txt">⚠ ${missed} للمراجعة</span>` : ''}</span></span>
-      <span class="bar"><i style="width:${(100 * k / count).toFixed(1)}%"></i></span>
-    </button>`;
+    return `<div class="prow-wrap">
+      <button class="prow" data-act="pickSurah" data-s="${s}">
+        <span class="prow-top"><b>سورة ${esc(sName(s))}</b><span class="muted small">${k} من ${count} آية${missed ? ` · <span class="warn-txt">⚠ ${missed} للمراجعة</span>` : ''}</span></span>
+        <span class="bar"><i style="width:${(100 * k / count).toFixed(1)}%"></i></span>
+      </button>
+      <button class="prow-del" data-act="removeSurah" data-s="${s}" title="إزالة سورة ${esc(sName(s))} من المحفوظ" aria-label="إزالة سورة ${esc(sName(s))} من المحفوظ">🗑</button>
+    </div>`;
   }).join('');
   const days = [];
   for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days.push({ d, n: D.log[todayStr(d)] || 0 }); }
@@ -782,6 +796,25 @@ view.addEventListener('click', async (e) => {
       case 'revise': {
         const sel = randomRevision();
         return sel ? startPractice(sel) : toast('سمِّع بعض الآيات أولًا');
+      }
+      case 'unmark':
+      case 'removeSurah': {
+        // forget ayahs: the selected range, or a whole surah from the progress list
+        let refs, label;
+        if (a === 'removeSurah') {
+          const s = +el.dataset.s;
+          refs = Array.from({ length: mem.list[s - 1].count }, (_, k) => [s, k + 1]);
+          label = `سورة ${sName(s)}`;
+        } else {
+          refs = selectionFromPick().refs;
+          label = labelOf(refs);
+        }
+        const hit = refs.filter(([s, x]) => D.known[s + ':' + x] || D.missed[s + ':' + x]);
+        if (!hit.length) return toast('لا توجد آيات محفوظة هنا');
+        if (!confirm(`إزالة «${label}» من المحفوظ؟\n\nستُحذف ${hit.length} آية من تقدُّمك ومن المراجعة العشوائية.`)) return;
+        for (const [s, x] of hit) { delete D.known[s + ':' + x]; delete D.missed[s + ':' + x]; }
+        save(); renderChoose();
+        return toast(`أُزيلت ${label} من المحفوظ`);
       }
       case 'already': {
         // mark the selected ayahs as memorised without a practice session
