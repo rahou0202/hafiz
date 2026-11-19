@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>حفظ</title>
+  <meta name="description" content="تطبيق بسيط لحفظ القرآن الكريم: اختر الآيات، سمِّعها وهي مخفية، وأظهر فقط ما نسيته.">
+  <meta name="theme-color" content="#047857">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23047857%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23059669%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%230d9488%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%22112%22%20fill%3D%22url(%23g)%22%2F%3E%0A%20%20%3Cg%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%2224%22%20stroke-linejoin%3D%22round%22%20stroke-linecap%3D%22round%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M256%20176c-40-30-92-38-140-30v214c48-8%20100%200%20140%2030%2040-30%2092-38%20140-30V146c-48-8-100%200-140%2030z%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M256%20176v214%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cpath%20d%3D%22M256%2066l15%2031%2034%205-25%2024%206%2034-30-16-30%2016%206-34-25-24%2034-5z%22%20fill%3D%22%23fbbf24%22%2F%3E%0A%3C%2Fsvg%3E" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+/* ================================================================
+   حفظ: bright, bold, professional theme (light only)
+   ================================================================ */
+:root {
+  --bg: #f3f6fa;
+  --surface: #ffffff;
+  --surface-2: #eef2f7;
+  --text: #0f172a;
+  --muted: #475569;
+  --border: #cbd5e1;
+
+  --primary: #059669;
+  --primary-strong: #047857;
+  --primary-soft: #d1fae5;
+  --primary-grad: linear-gradient(135deg, #047857 0%, #059669 55%, #0d9488 100%);
+
+  --amber: #d97706;
+  --amber-soft: #fef3c7;
+  --red: #dc2626;
+  --red-soft: #fee2e2;
+  --gold: #b7791f;
+
+  --mask: #e2e8f0;
+  --radius: 16px;
+  --shadow: 0 1px 2px rgba(15, 23, 42, .06), 0 8px 24px rgba(15, 23, 42, .06);
+  --shadow-strong: 0 6px 20px rgba(5, 150, 105, .35);
+  --quran: "Amiri Quran", "Scheherazade New", "Traditional Arabic", serif;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 500 17px/1.6 "IBM Plex Sans Arabic", system-ui, sans-serif;
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
+}
+button, select, input { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; }
+h1 { font-size: 28px; font-weight: 700; line-height: 1.35; margin: 0 0 18px; }
+h2 { font-size: 21px; font-weight: 700; margin: 28px 0 12px; }
+
+/* ---------- header ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--primary-grad);
+  padding: 12px 16px; padding-top: calc(12px + env(safe-area-inset-top));
+  box-shadow: 0 2px 12px rgba(4, 120, 87, .25);
+}
+.brand { display: inline-flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-weight: 700; font-size: 22px; }
+.brand img { width: 34px; height: 34px; border-radius: 10px; box-shadow: 0 0 0 2px rgba(255,255,255,.35); }
+
+.view { max-width: 760px; margin: 0 auto; padding: 20px 16px; }
+
+/* ---------- cards & buttons ---------- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+  padding: 10px 16px; border-radius: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  transition: transform .08s, box-shadow .15s, border-color .15s, background .15s;
+}
+.btn:hover { border-color: var(--primary); color: var(--primary-strong); }
+.btn:active { transform: scale(.98); }
+.btn.primary { background: var(--primary-grad); border-color: transparent; color: #fff; box-shadow: var(--shadow-strong); }
+.btn.primary:hover { color: #fff; filter: brightness(1.05); }
+.btn.big { padding: 14px 20px; font-size: 18px; font-weight: 700; border-radius: 14px; }
+.btn.small { padding: 6px 12px; font-size: 14px; border-radius: 10px; }
+.grow { flex: 1; }
+
+.icon-btn {
+  width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer; flex: none;
+  display: inline-grid; place-items: center; font-size: 12px;
+}
+.icon-btn.play { background: var(--primary-soft); color: var(--primary-strong); }
+.icon-btn.play:hover { background: var(--primary); color: #fff; }
+
+.mini {
+  border: 1.5px solid var(--border); background: var(--surface); color: var(--muted);
+  border-radius: 999px; padding: 4px 14px; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.mini.bad { color: var(--red); border-color: #fecaca; }
+.mini.bad:hover { background: var(--red); color: #fff; border-color: var(--red); }
+
+.tag { font-size: 14px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.tag.ok { background: var(--primary-soft); color: var(--primary-strong); }
+.tag.help { background: var(--amber-soft); color: #b45309; }
+.tag.bad { background: var(--red-soft); color: var(--red); }
+.tag.warn { background: var(--red-soft); color: var(--red); }
+
+/* ---------- form ---------- */
+.fl { display: flex; flex-direction: column; gap: 8px; font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 16px; flex: 1; min-width: 120px; }
+select, input[type=number] {
+  width: 100%; border: 2px solid var(--border); background: var(--surface); color: var(--text);
+  border-radius: 12px; padding: 12px 14px; font-size: 19px; font-weight: 700;
+}
+select:focus, input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
+
+/* ---------- screen 1: choose ---------- */
+.choose { position: relative; overflow: hidden; padding-top: 26px; }
+.choose::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 6px; background: var(--primary-grad); }
+.choose .btn.big { width: 100%; margin-top: 4px; }
+
+.focus-form .row { flex-wrap: nowrap; }
+.focus-form .row .fl { flex: 1 1 0; min-width: 0; }
+
+.list { display: grid; gap: 10px; }
+button.li {
+  width: 100%; display: flex; align-items: center; gap: 12px; text-align: start; cursor: pointer;
+  padding: 14px 16px; font: inherit; color: inherit;
+}
+button.li:hover { border-color: var(--primary); }
+.li-main { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.li-main b { font-size: 17px; }
+.go {
+  width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  background: var(--primary-soft); color: var(--primary-strong); font-size: 12px;
+}
+
+/* progress */
+.stats3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center; }
+.stats3 > div { background: var(--surface-2); border-radius: 14px; padding: 12px 6px; }
+.stats3 b { display: block; font-size: 30px; font-weight: 700; line-height: 1.2; color: var(--primary-strong); }
+.stats3 span { font-size: 14px; color: var(--muted); font-weight: 600; }
+.week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin: 18px 0 6px; }
+.day { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.dbar { height: 56px; width: 100%; max-width: 28px; background: var(--surface-2); border-radius: 8px; display: flex; align-items: flex-end; overflow: hidden; }
+.dbar i { display: block; width: 100%; background: var(--primary-grad); border-radius: 8px; }
+.prows { display: grid; margin-top: 10px; }
+.prow {
+  display: grid; gap: 8px; width: 100%; text-align: start; background: none; border: none;
+  border-top: 1px solid var(--border); padding: 14px 2px; cursor: pointer; font: inherit; color: inherit;
+}
+.prow:hover b { color: var(--primary-strong); }
+.prow-top { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+.bar { height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; display: block; }
+.bar > i { display: block; height: 100%; background: var(--primary-grad); border-radius: 999px; }
+.warn-txt { color: var(--red); font-weight: 600; }
+.progress > p { margin: 12px 0 0; }
+
+.how { margin-top: 24px; background: linear-gradient(180deg, #ffffff, #f8fafc); }
+.how > b { font-size: 17px; }
+.how ol { margin: 10px 0 0; padding-inline-start: 22px; display: grid; gap: 8px; color: #1e293b; line-height: 1.8; }
+.how ol b { color: var(--primary-strong); }
+.hl { background: #ecfdf5; border: 1.5px solid var(--primary); border-radius: 6px; padding: 0 6px; color: var(--primary-strong); font-weight: 600; }
+
+/* ---------- screen 2: practise ---------- */
+.p-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.p-title { display: flex; flex-direction: column; line-height: 1.4; }
+.p-title b { font-size: 19px; }
+.line { height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; margin-bottom: 18px; }
+.line i { display: block; height: 100%; background: var(--primary-grad); border-radius: 999px; transition: width .35s; }
+
+.s-head { text-align: center; font-family: var(--quran); font-size: 24px; color: var(--primary-strong); margin-top: 6px; }
+.bismillah { text-align: center; font-family: var(--quran); font-size: 30px; margin: 0 0 6px; color: var(--text); }
+
+.ayahs { display: grid; gap: 12px; }
+.ayah { padding: 14px 18px 16px; transition: border-color .2s, box-shadow .2s, opacity .2s; border-inline-start-width: 5px; }
+.ayah.current { border-color: var(--primary); border-width: 2px; border-inline-start-width: 5px; box-shadow: 0 0 0 5px var(--primary-soft), var(--shadow); }
+.ayah.current .a-no { color: var(--primary-strong); }
+.ayah.todo { opacity: .55; }
+.ayah.ok { border-inline-start-color: var(--primary); }
+.ayah.help { border-inline-start-color: var(--amber); }
+.ayah.help:has(.tag.bad) { border-inline-start-color: var(--red); }
+.ayah.flagged { border-color: #fca5a5; border-style: dashed; border-inline-start-style: solid; border-inline-start-color: var(--red); }
+.ayah.todo.flagged { opacity: .8; }
+.ayah.playing { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft), var(--shadow); }
+.ayah.playing .play { background: var(--primary); color: #fff; }
+
+.a-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.a-no { font-size: 15px; font-weight: 700; color: var(--muted); margin-inline-end: auto; }
+.a-text { font-family: var(--quran); font-size: 30px; line-height: 2.3; direction: rtl; text-align: right; word-spacing: 2px; }
+.a-text .w { border-radius: 6px; transition: color .15s; }
+.a-text .w.masked {
+  color: transparent; cursor: pointer; user-select: none;
+  background: linear-gradient(var(--mask), var(--mask)) center / 100% .75em no-repeat;
+}
+.ayah.current .a-text .w.masked { background-image: linear-gradient(#cbd5e1, #cbd5e1); }
+.a-text .w.masked:hover { background-image: linear-gradient(var(--primary-soft), var(--primary-soft)); }
+.a-text .end { font-size: 22px; color: var(--gold); margin-inline-start: 4px; white-space: nowrap; }
+
+.dock {
+  position: sticky; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 6; margin-top: 18px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px;
+  box-shadow: 0 -2px 6px rgba(15,23,42,.04), 0 12px 32px rgba(15,23,42,.14);
+}
+.dock .btn.grow { padding-block: 13px; font-size: 18px; font-weight: 700; }
+.dock-note { flex-basis: 100%; }
+@media (max-width: 560px) {
+  .dock .btn:not(.grow) { flex: 1 1 28%; font-size: 14px; padding-inline: 6px; }
+  .dock .btn.grow { flex-basis: 100%; order: -1; }
+}
+
+/* ---------- screen 3: result ---------- */
+.result { text-align: center; padding: 32px 20px; position: relative; overflow: hidden; }
+.result::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 6px; background: var(--primary-grad); }
+.score {
+  direction: ltr; unicode-bidi: isolate; font-size: 72px; font-weight: 700; line-height: 1;
+  background: var(--primary-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.score span { font-size: 34px; }
+.result h1 { margin: 14px 0 4px; font-size: 24px; }
+.breakdown { margin: 20px auto 0; max-width: 440px; }
+.breakdown b { font-size: 26px; }
+.c-ok { color: var(--primary-strong) !important; }
+.c-help { color: var(--amber) !important; }
+.c-bad { color: var(--red) !important; }
+.hard { margin: 16px auto 0; padding: 12px 16px; border-radius: 12px; background: var(--red-soft); color: #7f1d1d; max-width: 440px; font-size: 15px; }
+.hard .muted { color: #991b1b; opacity: .8; }
+.col-btns { display: grid; gap: 10px; max-width: 380px; margin: 24px auto 0; }
+
+/* ---------- misc ---------- */
+.empty { text-align: center; padding: 40px 18px; }
+.loading { text-align: center; padding: 48px; color: var(--muted); font-weight: 500; }
+.toast {
+  position: fixed; left: 50%; top: 80px; transform: translate(-50%, -16px); opacity: 0; pointer-events: none;
+  background: var(--text); color: #fff; padding: 10px 18px; border-radius: 12px; font-size: 15px; font-weight: 500;
+  transition: all .25s; z-index: 30; max-width: calc(100% - 32px); box-shadow: 0 10px 30px rgba(15,23,42,.25);
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.reset-row { text-align: center; margin-top: 28px; }
+.btn.danger { color: var(--red); border-color: #fecaca; background: #fff; }
+.btn.danger:hover { background: var(--red); color: #fff; border-color: var(--red); }
+
+/* ---------- random revision card ---------- */
+.revise { margin-top: 16px; background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 60%, #ffffff 100%); border-color: #a7f3d0; }
+.rev-top { display: flex; gap: 14px; align-items: flex-start; }
+.rev-top > div { display: flex; flex-direction: column; gap: 2px; }
+.rev-top b { font-size: 20px; }
+.rev-ico {
+  width: 48px; height: 48px; border-radius: 14px; flex: none; display: grid; place-items: center; font-size: 26px;
+  background: var(--primary-grad); box-shadow: var(--shadow-strong);
+}
+.rev-pool { margin: 14px 0; font-size: 15px; }
+.rev-pool b { color: var(--primary-strong); }
+.revise .btn.big { width: 100%; }
+
+/* ---------- clearer form ---------- */
+.count-hint {
+  display: inline-flex; align-items: center; gap: 6px; margin: -4px 0 18px;
+  background: var(--primary-soft); color: var(--primary-strong);
+  font-size: 16px; font-weight: 700; padding: 6px 14px; border-radius: 999px;
+}
+.count-hint b { font-size: 18px; }
+select { cursor: pointer; }
+.btn { border-width: 2px; }
+.p-title .muted, .li-main .muted { font-weight: 600; }
+
+</style>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="حفظ">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+</head>
+<body>
+  <header class="topbar">
+    <a href="#" class="brand" id="home" aria-label="العودة إلى البداية">
+      <img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23047857%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23059669%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%230d9488%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%22112%22%20fill%3D%22url(%23g)%22%2F%3E%0A%20%20%3Cg%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%2224%22%20stroke-linejoin%3D%22round%22%20stroke-linecap%3D%22round%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M256%20176c-40-30-92-38-140-30v214c48-8%20100%200%20140%2030%2040-30%2092-38%20140-30V146c-48-8-100%200-140%2030z%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M256%20176v214%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cpath%20d%3D%22M256%2066l15%2031%2034%205-25%2024%206%2034-30-16-30%2016%206-34-25-24%2034-5z%22%20fill%3D%22%23fbbf24%22%2F%3E%0A%3C%2Fsvg%3E" alt="" width="28" height="28"> <span>حفظ</span>
+    </a>
+  </header>
+
+  <main id="view" class="view"></main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+'use strict';
+
+/* ================================================================
+   حفظ: تطبيق بسيط لحفظ القرآن الكريم (Arabic UI)
+   Screen 1 (choose): pick a surah and which ayahs. Press Start.
+   Screen 2 (practise): everything hidden, one ayah highlighted.
+     "حفظتها"      -> ayah appears, counts as remembered
+     "أظهر كلمة"   -> next word appears, counts as needing help
+     "أظهر الآية"  -> whole ayah appears, counts as needing help
+     "▶ استمع لها" -> hear the hidden ayah, counts as needing help
+     "✗ أخطأت"     -> on a recited ayah, turns it into a mistake
+   Screen 3 (result): score; missed ayahs get ⚠ next time.
+   ================================================================ */
+
+const API = 'https://api.alquran.cloud/v1';
+const AUDIO = 'https://everyayah.com/data/';
+const RECITERS = {
+  Alafasy_128kbps: 'مشاري راشد العفاسي',
+  Husary_128kbps: 'محمود خليل الحصري',
+  Minshawy_Murattal_128kbps: 'محمد صديق المنشاوي',
+  Abdul_Basit_Murattal_192kbps: 'عبد الباسط عبد الصمد',
+  Ghamadi_40kbps: 'سعد الغامدي',
+};
+
+const $ = (s) => document.querySelector(s);
+const view = $('#view');
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const arNum = (n) => String(n).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
+const pad3 = (n) => String(n).padStart(3, '0');
+const todayStr = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+function dayLabel(date) {
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  return date === todayStr() ? 'اليوم' : date === todayStr(y) ? 'أمس' : date;
+}
+
+/* ---------------- saved data ---------------- */
+const LS = 'hifz.simple';
+// missed: "surah:ayah" -> true if you needed help the last time you practised that ayah
+// known:  "surah:ayah" -> true if you remembered it the last time
+// log:    "YYYY-MM-DD" -> number of practices finished that day
+let D = { pick: { s: 1, from: 1, to: 7 }, history: [], missed: {}, known: {}, log: {}, reciter: 'Alafasy_128kbps' };
+try { const s = JSON.parse(localStorage.getItem(LS)); if (s) D = { ...D, ...s }; } catch (e) {}
+function save() { try { localStorage.setItem(LS, JSON.stringify(D)); } catch (e) {} }
+
+/* ---------------- Quran text ---------------- */
+const mem = { list: null, surah: {} };
+
+async function getJSON(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json();
+  if (j.code !== 200) throw new Error(j.status || 'API error');
+  return j.data;
+}
+async function surahList() {
+  if (mem.list) return mem.list;
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem('hifz.surahs.ar')); } catch (e) {}
+  if (!d) {
+    // the API gives e.g. "سُورَةُ البَقَرَةِ"; keep just the name
+    d = (await getJSON(API + '/surah')).map((s) => ({ n: s.number, ar: s.name.replace(/^سُورَةُ\s+/, ''), count: s.numberOfAyahs }));
+    try { localStorage.setItem('hifz.surahs.ar', JSON.stringify(d)); } catch (e) {}
+  }
+  return (mem.list = d);
+}
+// interface text uses plain names (no tashkeel, ٱ -> ا) so they read clearly in the UI font;
+// the surah heading above the ayahs keeps the full Quranic spelling
+const plain = (t) => t.replace(/[ً-ٰٟۖ-ۭ]/g, '').replace(/ٱ/g, 'ا');
+const sNameQ = (n) => mem.list?.[n - 1]?.ar || 'سورة ' + n;
+const sName = (n) => plain(sNameQ(n));
+
+// a readable name for a list of [surah, ayah] refs
+function labelOf(refs) {
+  const [s1, a1] = refs[0], [s2, a2] = refs[refs.length - 1];
+  if (s1 !== s2) return `${sName(s1)} ${a1} إلى ${sName(s2)} ${a2}`;
+  if (a1 === 1 && a2 === mem.list[s1 - 1].count) return `سورة ${sName(s1)}`;
+  if (a1 === a2) return `${sName(s1)}، الآية ${a1}`;
+  return `${sName(s1)}، الآيات ${a1} إلى ${a2}`;
+}
+
+// the API puts the basmala in front of ayah 1 of most surahs; we show it separately
+function cleanText(s, a, t) {
+  t = t.replace(/^﻿/, '').trim();
+  if (a === 1 && s !== 1 && s !== 9) {
+    const w = t.split(/\s+/);
+    const bare = w[0].replace(/[ً-ٰٟۖ-ۭ]/g, '');
+    if (w.length > 4 && bare === 'بسم') t = w.slice(4).join(' ');
+  }
+  return t;
+}
+async function getSurah(n) {
+  if (mem.surah[n]) return mem.surah[n];
+  const d = await getJSON(`${API}/surah/${n}/quran-uthmani`);
+  return (mem.surah[n] = d.ayahs.map((a) => ({ s: n, a: a.numberInSurah, text: cleanText(n, a.numberInSurah, a.text) })));
+}
+async function resolve(refs) {
+  await Promise.all([...new Set(refs.map((r) => r[0]))].map(getSurah));
+  return refs.map(([s, a]) => mem.surah[s][a - 1]).filter(Boolean);
+}
+
+// split into words; stop signs (ۖ ۗ ۚ …) stay attached to the word before them
+const MARK = /^[ؕ-ؚۖ-ۭ]+$/;
+function words(text) {
+  const out = [];
+  for (const t of text.split(/\s+/).filter(Boolean)) {
+    if (MARK.test(t) && out.length) out[out.length - 1] += ' ' + t; else out.push(t);
+  }
+  return out;
+}
+
+/* ---------------- screen 1: choose ---------------- */
+function renderChoose() {
+  const p = D.pick;
+  const list = mem.list;
+  const sur = list[p.s - 1];
+  const knownIn = surahKnown();
+  const form = `<label class="fl">السورة
+         <select id="pS">${list.map((s) => `<option value="${s.n}" ${s.n === p.s ? 'selected' : ''}>${esc(plain(s.ar))} (${s.n})${knownIn[s.n] ? ` · ${knownIn[s.n]} من ${s.count} محفوظة` : ''}</option>`).join('')}</select></label>
+       <div class="row">
+         <label class="fl">من الآية<input id="pFrom" type="number" inputmode="numeric" min="1" max="${sur.count}" value="${p.from}"></label>
+         <label class="fl">إلى الآية<input id="pTo" type="number" inputmode="numeric" min="1" max="${sur.count}" value="${p.to}"></label>
+       </div>
+       <p class="count-hint">سورة ${esc(plain(sur.ar))} · <b>${sur.count}</b> آية</p>
+       <label class="fl">القارئ (لسماع التلاوة)
+         <select id="pRec">${Object.entries(RECITERS).map(([k, v]) => `<option value="${k}" ${D.reciter === k ? 'selected' : ''}>${v}</option>`).join('')}</select></label>`;
+
+  let html = `
+    <div class="card choose">
+      <h1>ماذا تريد أن تحفظ؟</h1>
+      <div class="focus-form">${form}</div>
+      <button class="btn primary big" data-act="start">ابدأ التسميع</button>
+    </div>`;
+
+  html += revisionCard();
+
+  if (D.history.length) {
+    html += `<h2>سمِّع مرة أخرى</h2><div class="list">${D.history.map((h, i) => `
+      <button class="card li again" data-act="again" data-i="${i}">
+        <span class="li-main"><b>${esc(labelOf(h.refs))}</b><span class="muted small">آخر مرة: ${h.ok} من ${h.n} · ${esc(dayLabel(h.date))}</span></span>
+        <span class="go">▶</span>
+      </button>`).join('')}</div>`;
+  }
+
+  html += progressCard(knownIn);
+
+  html += `
+    <div class="card how">
+      <b>طريقة الاستعمال</b>
+      <ol>
+        <li>اختر السورة والآيات، ثم اضغط <b>ابدأ التسميع</b>.</li>
+        <li>كل الآيات مخفية. سمِّع الآية <span class="hl">المظلَّلة</span> من حفظك.</li>
+        <li>إذا كنت تحفظها اضغط <b>حفظتها ✓</b>. وإذا توقفت اضغط <b>أظهر كلمة</b> أو <b>أظهر الآية</b> أو <b>▶ استمع لها</b>.</li>
+        <li>إذا ضغطت <b>حفظتها</b> ثم اكتشفت أنك أخطأت، اضغط <b>✗ أخطأت</b> على تلك الآية.</li>
+        <li>في النهاية تظهر نتيجتك، والآيات التي أخطأت فيها تُعلَّم بـ ⚠ في المرة القادمة.</li>
+        <li>في <b>المراجعة العشوائية</b> يختار لك التطبيق ${REVISE_COUNT} آيات متتالية من كل ما سمَّعته من قبل.</li>
+      </ol>
+    </div>`;
+  // reset: only shown once there is something to wipe
+  if (D.history.length || Object.keys(D.known).length || Object.keys(D.missed).length || Object.keys(D.log).length) {
+    html += `<div class="reset-row"><button class="btn danger" data-act="reset">🗑 مسح كل التقدم</button></div>`;
+  }
+  view.innerHTML = html;
+
+  const num = (id, key, max) => {
+    const el = $('#' + id);
+    if (el) el.addEventListener('change', () => { p[key] = Math.max(1, Math.min(max, Number(el.value) || 1)); save(); renderChoose(); });
+  };
+  const sel = $('#pS');
+  if (sel) sel.addEventListener('change', () => { p.s = Number(sel.value); p.from = 1; p.to = Math.min(10, list[p.s - 1].count); save(); renderChoose(); });
+  num('pFrom', 'from', sur.count); num('pTo', 'to', sur.count);
+  $('#pRec').addEventListener('change', (e) => { D.reciter = e.target.value; save(); });
+}
+
+/* ---------------- progress tracking ---------------- */
+// how many ayahs of each surah you remembered the last time you practised them
+function surahKnown() {
+  const out = {};
+  for (const k in D.known) { const s = +k.split(':')[0]; out[s] = (out[s] || 0) + 1; }
+  return out;
+}
+function streakDays() {
+  let n = 0;
+  const d = new Date();
+  if (!D.log[todayStr(d)]) d.setDate(d.getDate() - 1); // today not done yet doesn't break the streak
+  while (D.log[todayStr(d)]) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function progressCard(knownIn) {
+  const practices = Object.values(D.log).reduce((a, b) => a + b, 0);
+  if (!practices) return '';
+  const totalKnown = Object.keys(D.known).length;
+  const touched = new Set([...Object.keys(D.known), ...Object.keys(D.missed)].map((k) => +k.split(':')[0]));
+  const rows = [...touched].sort((a, b) => a - b).map((s) => {
+    const count = mem.list[s - 1].count, k = knownIn[s] || 0;
+    const missed = Object.keys(D.missed).filter((x) => +x.split(':')[0] === s).length;
+    return `<button class="prow" data-act="pickSurah" data-s="${s}">
+      <span class="prow-top"><b>سورة ${esc(sName(s))}</b><span class="muted small">${k} من ${count} آية${missed ? ` · <span class="warn-txt">⚠ ${missed} للمراجعة</span>` : ''}</span></span>
+      <span class="bar"><i style="width:${(100 * k / count).toFixed(1)}%"></i></span>
+    </button>`;
+  }).join('');
+  const days = [];
+  for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days.push({ d, n: D.log[todayStr(d)] || 0 }); }
+  const max = Math.max(1, ...days.map((x) => x.n));
+  return `
+    <h2>تقدُّمك</h2>
+    <div class="card progress">
+      <div class="stats3">
+        <div><b>${totalKnown}</b><span>آية محفوظة</span></div>
+        <div><b>${practices}</b><span>مرة سمَّعت</span></div>
+        <div><b>${streakDays()}</b><span>أيام متتالية</span></div>
+      </div>
+      <div class="week">${days.map(({ d, n }) => `<div class="day" title="${d.toLocaleDateString('ar', { weekday: 'long' })}: ${n}">
+        <span class="dbar"><i style="height:${(100 * n / max).toFixed(0)}%"></i></span><span>${d.toLocaleDateString('ar', { weekday: 'narrow' })}</span></div>`).join('')}</div>
+      <div class="prows">${rows}</div>
+      <p class="muted small">«محفوظة» تعني أنك سمَّعت الآية دون مساعدة في آخر مرة.</p>
+    </div>`;
+}
+
+/* ---------------- random revision ---------------- */
+// every ayah you've recited before, grouped into runs of consecutive ayahs per surah
+function revisionRuns() {
+  const bySurah = {};
+  for (const k of [...Object.keys(D.known), ...Object.keys(D.missed)]) {
+    const [s, a] = k.split(':').map(Number);
+    (bySurah[s] = bySurah[s] || new Set()).add(a);
+  }
+  const runs = [];
+  for (const s in bySurah) {
+    const as = [...bySurah[s]].sort((x, y) => x - y);
+    let from = as[0], prev = as[0];
+    for (const a of as.slice(1)) {
+      if (a === prev + 1) { prev = a; continue; }
+      runs.push({ s: +s, from, to: prev });
+      from = prev = a;
+    }
+    runs.push({ s: +s, from, to: prev });
+  }
+  return runs;
+}
+// pick 10 consecutive ayahs at a random spot (longer runs are picked more often)
+const REVISE_COUNT = 10;
+function randomRevision() {
+  const runs = revisionRuns();
+  if (!runs.length) return null;
+  const size = (r) => r.to - r.from + 1;
+  let x = Math.random() * runs.reduce((t, r) => t + size(r), 0);
+  let run = runs[runs.length - 1];
+  for (const r of runs) { x -= size(r); if (x < 0) { run = r; break; } }
+  const n = Math.min(REVISE_COUNT, size(run));
+  const start = run.from + Math.floor(Math.random() * (size(run) - n + 1));
+  return { refs: Array.from({ length: n }, (_, i) => [run.s, start + i]), revision: true };
+}
+function revisionCard() {
+  const runs = revisionRuns();
+  const ayahs = runs.reduce((t, r) => t + r.to - r.from + 1, 0);
+  const surahs = new Set(runs.map((r) => r.s)).size;
+  return `
+    <div class="card revise">
+      <div class="rev-top">
+        <span class="rev-ico">🎲</span>
+        <div><b>المراجعة العشوائية</b>
+          <span class="muted small">${REVISE_COUNT} آيات متتالية يختارها التطبيق عشوائيًا من كل ما سمَّعته من قبل.</span></div>
+      </div>
+      ${ayahs
+        ? `<p class="rev-pool">لديك <b>${ayahs}</b> آية في <b>${surahs}</b> ${surahs === 1 ? 'سورة' : 'سور'} للمراجعة</p>
+           <button class="btn primary big" data-act="revise">ابدأ المراجعة</button>`
+        : `<p class="muted small rev-pool">سمِّع بعض الآيات أولًا، ثم ستجدها هنا للمراجعة.</p>`}
+    </div>`;
+}
+
+function selectionFromPick() {
+  const p = D.pick;
+  const count = mem.list[p.s - 1].count;
+  let a = Math.min(p.from, count), b = Math.min(p.to, count);
+  if (a > b) [a, b] = [b, a];
+  return { refs: Array.from({ length: b - a + 1 }, (_, i) => [p.s, a + i]) };
+}
+
+/* ---------------- screen 2: practise ---------------- */
+let P = null; // {label, refs, ayahs, w, shown, helped, mistake, cur}
+// an ayah counts as missed if you needed help, or said "حفظتها" and then found a mistake
+const wrong = (i) => P.helped[i] || P.mistake[i];
+
+async function startPractice(sel) {
+  view.innerHTML = '<div class="loading">جارٍ التحميل…</div>';
+  try {
+    const ayahs = await resolve(sel.refs);
+    P = { label: (sel.revision ? 'مراجعة: ' : '') + labelOf(sel.refs), revision: !!sel.revision, refs: sel.refs, ayahs, w: ayahs.map((x) => words(x.text)), shown: ayahs.map(() => 0), helped: ayahs.map(() => false), mistake: ayahs.map(() => false), cur: 0 };
+    location.hash = 'practise';
+    renderPractice();
+    window.scrollTo(0, 0);
+  } catch (e) {
+    view.innerHTML = errorBox(e);
+  }
+}
+
+function renderPractice() {
+  const cur = P.cur;
+  const n = P.ayahs.length;
+  let html = `
+    <div class="p-head">
+      <button class="btn small" data-act="back">→ رجوع</button>
+      <div class="p-title"><b>${esc(P.label)}</b><span class="muted small">${cur < n ? `الآية ${cur + 1} من ${n}` : 'انتهيت، راجع الآيات'}</span></div>
+    </div>
+    <div class="line"><i style="width:${(100 * cur / n).toFixed(1)}%"></i></div>
+    <div class="ayahs">`;
+
+  P.ayahs.forEach((x, i) => {
+    const prev = P.ayahs[i - 1];
+    if (!prev || prev.s !== x.s) {
+      html += `<div class="s-head">سُورَةُ ${esc(sNameQ(x.s))}</div>`;
+      if (x.a === 1 && x.s !== 1 && x.s !== 9) html += `<div class="bismillah">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>`;
+    }
+    const state = i < cur ? (wrong(i) ? 'help' : 'ok') : i === cur ? 'current' : 'todo';
+    const ws = P.w[i].map((w, j) => `<span class="w${j < P.shown[i] ? '' : ' masked'}" data-act="word" data-i="${i}" data-j="${j}">${esc(w)}</span>`).join(' ');
+    const missedBefore = D.missed[x.s + ':' + x.a];
+    let badge = '';
+    if (i < cur) {
+      // a recited ayah: what happened, plus a way to mark (or undo) a mistake, even after a hint
+      if (!wrong(i)) badge = '<span class="tag ok">✓ حفظتها</span>';
+      if (P.helped[i]) badge += '<span class="tag help">احتجت مساعدة</span>';
+      badge += P.mistake[i]
+        ? `<span class="tag bad">✗ خطأ</span><button class="mini" data-act="unmistake" data-i="${i}">تراجع</button>`
+        : `<button class="mini bad" data-act="mistake" data-i="${i}">✗ أخطأت</button>`;
+    } else if (missedBefore) badge = '<span class="tag warn">⚠ أخطأت فيها آخر مرة</span>';
+    // play button once the ayah's text is visible (recited or revealed)
+    const canPlay = i < cur || (i === cur && P.shown[i] >= P.w[i].length);
+    const play = canPlay ? `<button class="icon-btn play" data-act="play" data-i="${i}" aria-label="تشغيل الآية ${x.a}">▶</button>` : '';
+    html += `<div class="card ayah ${state}${missedBefore && i >= cur ? ' flagged' : ''}" data-i="${i}">
+      <div class="a-top">${play}<span class="a-no">الآية ${x.a}</span>${badge}</div>
+      <div class="a-text">${ws} <span class="end">﴿${arNum(x.a)}﴾</span></div>
+    </div>`;
+  });
+  html += '</div>';
+
+  if (cur >= n) {
+    html += `<div class="dock card">
+         <span class="muted small dock-note">أخطأت في آية؟ اضغط <b>✗ أخطأت</b> عليها. واضغط ▶ لسماع أي آية.</span>
+         <button class="btn" data-act="playAll">▶ استمع للكل</button>
+         <button class="btn primary grow" data-act="finish">اعرض النتيجة ←</button>
+       </div>`;
+    view.innerHTML = html;
+    if (Q) markPlaying();
+    return;
+  }
+  const full = P.shown[cur] >= P.w[cur].length;
+  html += full
+    ? `<div class="dock card">
+         <button class="btn" data-act="listen">▶ استمع</button>
+         <button class="btn primary grow" data-act="next">الآية التالية ←</button>
+       </div>`
+    : `<div class="dock card">
+         <button class="btn" data-act="word1">أظهر كلمة</button>
+         <button class="btn" data-act="showAyah">أظهر الآية</button>
+         <button class="btn" data-act="hear">▶ استمع لها</button>
+         <button class="btn primary grow" data-act="remember">حفظتها ✓</button>
+       </div>`;
+  view.innerHTML = html;
+  if (Q) markPlaying();
+}
+
+function act(a, i, j) {
+  if (a === 'mistake') { P.mistake[i] = true; return renderPractice(); }
+  if (a === 'unmistake') { P.mistake[i] = false; return renderPractice(); }
+  if (a === 'finish') return finish();
+  const cur = P.cur;
+  if (cur >= P.ayahs.length) return;
+  const len = P.w[cur].length;
+  if (a === 'remember') { P.shown[cur] = len; return advance(); }
+  if (a === 'word1') { P.shown[cur]++; P.helped[cur] = true; }
+  if (a === 'showAyah') { P.shown[cur] = len; P.helped[cur] = true; }
+  // hearing the hidden ayah is a hint too
+  if (a === 'hear') { P.helped[cur] = true; renderPractice(); return playList([cur]); }
+  if (a === 'word' && i === cur && j >= P.shown[cur]) { P.shown[cur] = j + 1; P.helped[cur] = true; }
+  if (a === 'next') return advance();
+  renderPractice();
+}
+function advance() {
+  stopAudio();
+  P.cur++;
+  renderPractice();
+  const el = document.querySelector('.ayah.current') || document.querySelector('.ayah:last-child');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/* ---------------- screen 3: result ---------------- */
+function finish() {
+  stopAudio();
+  const n = P.ayahs.length;
+  const hard = P.ayahs.filter((x, i) => wrong(i));
+  const ok = n - hard.length;
+  // remember which ayahs were missed, so next time they're marked
+  P.ayahs.forEach((x, i) => {
+    const k = x.s + ':' + x.a;
+    if (wrong(i)) { D.missed[k] = true; delete D.known[k]; } else { D.known[k] = true; delete D.missed[k]; }
+  });
+  D.log[todayStr()] = (D.log[todayStr()] || 0) + 1;
+  // keep the 8 most recent practices, one entry per selection
+  // random revisions don't go in the "سمِّع مرة أخرى" list
+  if (!P.revision) {
+    const same = (h) => h.refs.length === P.refs.length && h.refs[0][0] === P.refs[0][0] && h.refs[0][1] === P.refs[0][1];
+    D.history = [{ refs: P.refs, ok, n, date: todayStr() }, ...D.history.filter((h) => !same(h))].slice(0, 8);
+  }
+  save();
+  P.hard = hard;
+  location.hash = 'result';
+  renderResult();
+  window.scrollTo(0, 0);
+}
+function renderResult() {
+  const n = P.ayahs.length, hard = P.hard, ok = n - hard.length;
+  const msg = ok === n ? 'ممتاز، سمَّعت كل الآيات دون خطأ.' : ok >= n * 0.7 ? 'أحسنت، واصل.' : 'واصل، سيصبح الأمر أسهل بإذن الله.';
+  view.innerHTML = `
+    <div class="card result">
+      <div class="score" dir="ltr">${ok}<span>/${n}</span></div>
+      <h1>سمَّعت ${ok} من ${n} آية دون مساعدة</h1>
+      <p class="muted">${esc(P.label)} · ${msg}</p>
+      <div class="stats3 breakdown">
+        <div><b class="c-ok">${ok}</b><span>✓ حفظتها</span></div>
+        <div><b class="c-help">${P.helped.filter((h, i) => h && !P.mistake[i]).length}</b><span>احتجت مساعدة</span></div>
+        <div><b class="c-bad">${P.mistake.filter(Boolean).length}</b><span>✗ أخطاء</span></div>
+      </div>
+      ${hard.length ? `<div class="hard"><b>تحتاج مراجعة:</b> ${hard.map((x) => `الآية ${x.a}`).join('، ')}<br><span class="muted small">ستُعلَّم بـ ⚠ في المرة القادمة.</span></div>` : ''}
+      <div class="col-btns">
+        ${P.revision
+          ? `<button class="btn primary big" data-act="revise">🎲 مراجعة عشوائية أخرى</button>
+             <button class="btn big" data-act="allAgain">أعد نفس الآيات</button>`
+          : '<button class="btn primary big" data-act="allAgain">سمِّع مرة أخرى</button>'}
+        <button class="btn big" data-act="back">اختر شيئًا آخر</button>
+      </div>
+    </div>`;
+}
+
+/* ---------------- audio ---------------- */
+const audio = new Audio();
+let Q = null; // what's playing: {list: [ayah indexes in P], k: position}
+
+function playList(list) {
+  Q = { list, k: 0 };
+  playCurrent();
+}
+function playCurrent() {
+  const x = P.ayahs[Q.list[Q.k]];
+  audio.src = `${AUDIO}${D.reciter}/${pad3(x.s)}${pad3(x.a)}.mp3`;
+  // AbortError just means you moved on before it started; not worth a message
+  audio.play().catch((e) => { if (e.name !== 'AbortError') { toast('تعذَّر تشغيل التلاوة (تحقَّق من الاتصال بالإنترنت)'); stopAudio(); } });
+  markPlaying();
+}
+audio.addEventListener('ended', () => {
+  if (!Q) return;
+  Q.k++;
+  if (Q.k < Q.list.length) playCurrent(); else stopAudio();
+});
+function stopAudio() {
+  audio.pause();
+  Q = null;
+  markPlaying();
+}
+// highlight the ayah being recited and turn its ▶ into ■
+function markPlaying() {
+  const now = Q ? Q.list[Q.k] : -1;
+  document.querySelectorAll('.ayah').forEach((el) => {
+    const on = +el.dataset.i === now;
+    el.classList.toggle('playing', on);
+    const b = el.querySelector('.play');
+    if (b) b.textContent = on ? '■' : '▶';
+  });
+  if (Q && Q.list.length > 1) document.querySelector('.ayah.playing')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/* ---------------- events & navigation ---------------- */
+view.addEventListener('click', async (e) => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const a = el.dataset.act;
+  const i = el.dataset.i != null ? +el.dataset.i : null;
+  const j = el.dataset.j != null ? +el.dataset.j : null;
+  try {
+    switch (a) {
+      case 'start': return startPractice(selectionFromPick());
+      case 'again': return startPractice(D.history[i]);
+      case 'back': stopAudio(); location.hash = ''; return;
+      case 'remember': case 'word1': case 'showAyah': case 'next': case 'word':
+      case 'mistake': case 'unmistake': case 'finish': case 'hear': return act(a, i, j);
+      case 'listen': return playList([P.cur]);
+      case 'play': // tap ▶ to play, tap ■ to stop
+        if (Q && Q.list[Q.k] === i) return stopAudio();
+        return playList([i]);
+      case 'playAll': return playList(P.ayahs.map((x, k) => k));
+      case 'allAgain': return startPractice({ refs: P.refs, revision: P.revision });
+      case 'revise': {
+        const sel = randomRevision();
+        return sel ? startPractice(sel) : toast('سمِّع بعض الآيات أولًا');
+      }
+      case 'reset': {
+        if (!confirm('هل تريد مسح كل تقدُّمك؟\n\nسيُحذف: الآيات المحفوظة، علامات ⚠، قائمة «سمِّع مرة أخرى»، والأيام المتتالية.\nلا يمكن التراجع عن هذا.')) return;
+        // keep the chosen surah and reciter, wipe everything that was learned
+        D = { pick: D.pick, reciter: D.reciter, history: [], missed: {}, known: {}, log: {} };
+        save(); renderChoose(); window.scrollTo({ top: 0, behavior: 'smooth' });
+        return toast('تم مسح كل التقدُّم');
+      }
+      case 'pickSurah': {
+        const s = +el.dataset.s;
+        D.pick = { s, from: 1, to: mem.list[s - 1].count };
+        save(); renderChoose(); window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+    }
+  } catch (err) { toast(err.message); }
+});
+$('#home').addEventListener('click', (e) => { e.preventDefault(); stopAudio(); location.hash = ''; });
+window.addEventListener('hashchange', () => {
+  const h = location.hash.slice(1);
+  if (h === 'practise' && P) return renderPractice();
+  if (h === 'result' && P?.hard) return renderResult();
+  renderChoose();
+});
+
+function errorBox(e) {
+  return `<div class="card empty"><p><b>تعذَّر تحميل نص القرآن.</b></p>
+    <p class="muted">تحقَّق من اتصالك بالإنترنت ثم حاول مرة أخرى. <span dir="ltr">(${esc(e.message)})</span></p>
+    <button class="btn primary" onclick="location.reload()">حاول مرة أخرى</button></div>`;
+}
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+(async function boot() {
+  view.innerHTML = '<div class="loading">جارٍ التحميل…</div>';
+  try { await surahList(); } catch (e) { view.innerHTML = errorBox(e); return; }
+  // older history entries without refs can't be replayed
+  D.history = D.history.filter((h) => Array.isArray(h.refs) && h.refs.length);
+  if (location.hash) history.replaceState(null, '', location.pathname);
+  renderChoose();
+})();
+
+</script>
+</body>
+</html>
