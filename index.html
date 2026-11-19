@@ -830,7 +830,14 @@ function toast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((r) => r.update()).catch(() => {});
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hadController && !reloaded) { reloaded = true; location.reload(); }
+  });
+}
 (async function boot() {
   view.innerHTML = '<div class="loading">جارٍ التحميل…</div>';
   try { await surahList(); } catch (e) { view.innerHTML = errorBox(e); return; }
