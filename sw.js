@@ -1,5 +1,5 @@
 // offline support: app page network-first, Quran text and fonts cache-first
-const APP = 'hifz-app-mwnmc781', DATA = 'hifz-data-v1';
+const APP = 'hifz-app-mwnn456s', DATA = 'hifz-data-v1';
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(APP).then((c) => c.addAll(['./', 'index.html', 'manifest.webmanifest', 'icon-192.png'])).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== APP && k !== DATA).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', (e) => {

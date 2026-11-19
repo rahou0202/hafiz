@@ -253,6 +253,8 @@ button.li:hover { border-color: var(--primary); }
 .rev-pool { margin: 14px 0; font-size: 15px; }
 .rev-pool b { color: var(--primary-strong); }
 .revise .btn.big { width: 100%; }
+.choose .btn.already { margin-top: 10px; font-size: 16px; color: var(--primary-strong); border-color: #a7f3d0; background: #f0fdf4; white-space: normal; }
+.choose .btn.already:hover { background: var(--primary-soft); border-color: var(--primary); }
 
 /* ---------- clearer form ---------- */
 .count-hint {
@@ -416,6 +418,7 @@ function renderChoose() {
       <h1>ماذا تريد أن تحفظ؟</h1>
       <div class="focus-form">${form}</div>
       <button class="btn primary big" data-act="start">ابدأ التسميع</button>
+      <button class="btn big already" data-act="already">✓ أحفظها مسبقًا: أضِفها إلى المحفوظ</button>
     </div>`;
 
   html += revisionCard();
@@ -474,7 +477,8 @@ function streakDays() {
 }
 function progressCard(knownIn) {
   const practices = Object.values(D.log).reduce((a, b) => a + b, 0);
-  if (!practices) return '';
+  // also show it when ayahs were added as "already memorised" without practising
+  if (!practices && !Object.keys(D.known).length && !Object.keys(D.missed).length) return '';
   const totalKnown = Object.keys(D.known).length;
   const touched = new Set([...Object.keys(D.known), ...Object.keys(D.missed)].map((k) => +k.split(':')[0]));
   const rows = [...touched].sort((a, b) => a - b).map((s) => {
@@ -549,7 +553,7 @@ function revisionCard() {
           <span class="muted small">${REVISE_COUNT} آيات متتالية يختارها التطبيق عشوائيًا من كل ما سمَّعته من قبل.</span></div>
       </div>
       ${ayahs
-        ? `<p class="rev-pool">لديك <b>${ayahs}</b> آية في <b>${surahs}</b> ${surahs === 1 ? 'سورة' : 'سور'} للمراجعة</p>
+        ? `<p class="rev-pool">لديك <b>${ayahs}</b> آية في ${surahs === 1 ? '<b>سورة واحدة</b>' : surahs === 2 ? '<b>سورتين</b>' : '<b>' + surahs + '</b> ' + (surahs <= 10 ? 'سور' : 'سورة')} للمراجعة</p>
            <button class="btn primary big" data-act="revise">ابدأ المراجعة</button>`
         : `<p class="muted small rev-pool">سمِّع بعض الآيات أولًا، ثم ستجدها هنا للمراجعة.</p>`}
     </div>`;
@@ -778,6 +782,15 @@ view.addEventListener('click', async (e) => {
       case 'revise': {
         const sel = randomRevision();
         return sel ? startPractice(sel) : toast('سمِّع بعض الآيات أولًا');
+      }
+      case 'already': {
+        // mark the selected ayahs as memorised without a practice session
+        const sel = selectionFromPick();
+        const label = labelOf(sel.refs);
+        if (!confirm(`إضافة «${label}» (${sel.refs.length} آية) إلى المحفوظ؟\n\nستظهر في تقدُّمك وفي المراجعة العشوائية.`)) return;
+        for (const [s, a] of sel.refs) { D.known[s + ':' + a] = true; delete D.missed[s + ':' + a]; }
+        save(); renderChoose();
+        return toast(`✓ أُضيفت ${label} إلى المحفوظ`);
       }
       case 'reset': {
         if (!confirm('هل تريد مسح كل تقدُّمك؟\n\nسيُحذف: الآيات المحفوظة، علامات ⚠، قائمة «سمِّع مرة أخرى»، والأيام المتتالية.\nلا يمكن التراجع عن هذا.')) return;
